@@ -1,6 +1,6 @@
 import {Injectable, NotFoundException} from '@nestjs/common'
 import {InjectModel} from 'nestjs-typegoose'
-import {ModelType} from '@typegoose/typegoose/lib/types'
+import {DocumentType, ModelType} from '@typegoose/typegoose/lib/types'
 import {ActorModel} from './actor.model'
 import {ActorDto} from './dto/actor.dto'
 
@@ -17,11 +17,11 @@ export class ActorService {
 		return doc
 	}
 
-	async getAll(searchTerm?: string) {
+	async getAll(searchTerm?: string): Promise<DocumentType<ActorModel>[]> {
 		// eslint-disable-next-line @typescript-eslint/ban-types
-		let options: {}
+		let options = {}
 
-		if (searchTerm)
+		if (searchTerm) {
 			options = {
 				$or: [
 					{
@@ -32,13 +32,26 @@ export class ActorService {
 					}
 				]
 			}
+		}
 
 		/* AGGREGATION*/
 
-		return this.ActorModel.find(options)
-			.select('-updatedAt -__v')
+		return this.ActorModel.aggregate()
+			.match(options)
+			.lookup({
+				from: 'Movie',
+				localField: '_id',
+				foreignField: 'actors',
+				as: 'movies'
+			})
+			.addFields({
+				countMovies: {
+					$size: '$movies'
+				}
+			})
+			.project({__v: 0, updatedAt: 0, movies: 0})
 			.sort({
-				createdAt: 'desc'
+				createdAt: -1
 			})
 			.exec()
 	}

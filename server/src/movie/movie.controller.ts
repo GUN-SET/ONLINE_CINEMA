@@ -1,34 +1,89 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { MovieService } from './movie.service';
-import { CreateMovieDto } from './dto/create-movie.dto';
-import { UpdateMovieDto } from './dto/update-movie.dto';
+import {
+	Body,
+	Controller,
+	Delete,
+	Get,
+	HttpCode,
+	Param,
+	Post,
+	Put,
+	Query,
+	UsePipes,
+	ValidationPipe
+} from '@nestjs/common'
+import {MovieService} from './movie.service'
+import {Auth} from '../auth/decorators/auth.decorator'
+import {IdValidationPipe} from '../pipes/id.validation.pipe'
+import {Types} from 'mongoose'
+import {UpdateMovieDto} from './dto/update-movie.dto'
+import {GenreIdsDto} from './dto/genreIds.dto'
 
-@Controller('movie')
+@Controller('movies')
 export class MovieController {
-  constructor(private readonly movieService: MovieService) {}
+	constructor(private readonly movieService: MovieService) {}
 
-  @Post()
-  create(@Body() createMovieDto: CreateMovieDto) {
-    return this.movieService.create(createMovieDto);
-  }
+	@Get('by-slug/:slug')
+	async bySlug(@Param('slug') slug: string) {
+		return this.movieService.bySlug(slug)
+	}
 
-  @Get()
-  findAll() {
-    return this.movieService.findAll();
-  }
+	@Get('by-actor/:actorId')
+	async byActor(@Param('actorId', IdValidationPipe) actorId: Types.ObjectId) {
+		return this.movieService.byActor(actorId)
+	}
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.movieService.findOne(+id);
-  }
+	@UsePipes(new ValidationPipe())
+	@Post('by-genres')
+	@HttpCode(200)
+	async byGenres(@Body() {genreIds}: GenreIdsDto) {
+		return this.movieService.byGenres(genreIds)
+	}
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMovieDto: UpdateMovieDto) {
-    return this.movieService.update(+id, updateMovieDto);
-  }
+	@Get()
+	async getAll(@Query('searchTerm') searchTerm?: string) {
+		return this.movieService.getAll(searchTerm)
+	}
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.movieService.remove(+id);
-  }
+	@Get('most-popular')
+	async getMostPopular() {
+		return this.movieService.getMostPopular()
+	}
+
+	@Put('update-count-opened')
+	@HttpCode(200)
+	async updateCountOpened(@Body('slug') slug: string) {
+		return this.movieService.updateCountOpened(slug)
+	}
+
+	@Get(':id')
+	@Auth('admin')
+	async get(@Param('id', IdValidationPipe) id: string) {
+		return this.movieService.byId(id)
+	}
+
+	@UsePipes(new ValidationPipe())
+	@Post()
+	@HttpCode(200)
+	@Auth('admin')
+	async create() {
+		return this.movieService.create()
+	}
+
+	@UsePipes(new ValidationPipe())
+	@Put(':id')
+	@HttpCode(200)
+	@Auth('admin')
+	async update(
+		@Param('id', IdValidationPipe) id: string,
+		@Body() dto: UpdateMovieDto
+	) {
+		return this.movieService.update(id, dto)
+	}
+
+	@Delete(':id')
+	@HttpCode(200)
+	@Auth('admin')
+	async delete(@Param('id', IdValidationPipe) id: string) {
+		return this.movieService.delete(id)
+	}
 }
