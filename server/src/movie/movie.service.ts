@@ -68,6 +68,16 @@ export class MovieService {
 		return updateDoc
 	}
 
+	async updateRating(id: Types.ObjectId, newRating: number) {
+		return this.MovieModel.findByIdAndUpdate(
+			id,
+			{
+				rating: newRating
+			},
+			{new: true}
+		).exec()
+	}
+
 	async getMostPopular() {
 		return this.MovieModel.find({countOpened: {$gt: 0}})
 			.sort({countOpened: -1})
