@@ -1,14 +1,13 @@
-import {IsArray, IsNumber, IsObject, IsString} from 'class-validator'
-import {Types} from 'mongoose'
+import {IsArray, IsBoolean, IsNumber, IsObject, IsString} from 'class-validator'
 
-export class Parameters {
+export class Parameter {
 	@IsNumber()
 	year: number
 
 	@IsNumber()
 	duration: number
 
-	@IsNumber()
+	@IsString()
 	country: string
 }
 
@@ -22,22 +21,23 @@ export class UpdateMovieDto {
 	@IsString()
 	title: string
 
-	@IsString()
-	slug: string
-
 	@IsObject()
-	parameters?: Parameters
-
-	@IsString()
-	videoUrl: string
+	parameters?: Parameter
 
 	@IsArray()
 	@IsString({each: true})
-	genres: Types.ObjectId[]
+	genres: string[]
 
 	@IsArray()
 	@IsString({each: true})
 	actors: string[]
 
+	@IsString()
+	videoUrl: string
+
+	@IsString()
+	slug: string
+
+	@IsBoolean()
 	isSendTelegram?: boolean
 }

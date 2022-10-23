@@ -1,11 +1,11 @@
 import {prop, Ref} from '@typegoose/typegoose'
 import {Base, TimeStamps} from '@typegoose/typegoose/lib/defaultClasses'
-import {ActorModel} from '../actor/actor.model'
-import {GenreModel} from '../genre/genre.model'
+import {ActorModel} from 'src/actor/actor.model'
+import {GenreModel} from 'src/genre/genre.model'
 
 export interface MovieModel extends Base {}
 
-export class Parameters {
+export class Parameter {
 	@prop()
 	year: number
 
@@ -23,29 +23,29 @@ export class MovieModel extends TimeStamps {
 	@prop()
 	bigPoster: string
 
-	@prop()
+	@prop({unique: true})
 	title: string
 
-	@prop({unique: true})
-	slug: string
-
 	@prop()
-	parameters?: Parameters
+	parameters: Parameter
 
 	@prop({default: 4.0})
 	rating?: number
 
-	@prop()
-	videoUrl: string
+	@prop({ref: () => GenreModel})
+	genres: Ref<GenreModel>[]
 
 	@prop({default: 0})
 	countOpened?: number
 
-	@prop({ref: () => GenreModel})
-	genres: Ref<GenreModel>[]
+	@prop({unique: true})
+	videoUrl: string
 
 	@prop({ref: () => ActorModel})
 	actors: Ref<ActorModel>[]
+
+	@prop({unique: true})
+	slug: string
 
 	@prop({default: false})
 	isSendTelegram?: boolean

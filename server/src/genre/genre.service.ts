@@ -1,13 +1,16 @@
 import {Injectable, NotFoundException} from '@nestjs/common'
 import {InjectModel} from 'nestjs-typegoose'
-import {ModelType} from '@typegoose/typegoose/lib/types'
+import {DocumentType, ModelType} from '@typegoose/typegoose/lib/types'
 import {GenreModel} from './genre.model'
 import {CreateGenreDto} from './dto/create-genre.dto'
+import {MovieService} from '../movie/movie.service'
+import {Collection} from './genre.interface'
 
 @Injectable()
 export class GenreService {
 	constructor(
-		@InjectModel(GenreModel) private readonly GenreModel: ModelType<GenreModel>
+		@InjectModel(GenreModel) private readonly GenreModel: ModelType<GenreModel>,
+		private readonly movieService: MovieService
 	) {}
 
 	async bySlug(slug: string) {
@@ -17,11 +20,10 @@ export class GenreService {
 		return doc
 	}
 
-	async getAll(searchTerm?: string) {
-		// eslint-disable-next-line @typescript-eslint/ban-types
-		let options: {}
+	async getAll(searchTerm?: string): Promise<DocumentType<GenreModel>[]> {
+		let options = {}
 
-		if (searchTerm)
+		if (searchTerm) {
 			options = {
 				$or: [
 					{
@@ -35,19 +37,34 @@ export class GenreService {
 					}
 				]
 			}
+		}
 
 		return this.GenreModel.find(options)
 			.select('-updatedAt -__v')
-			.sort({
-				createdAt: 'desc'
-			})
+			.sort({createdAt: 'desc'})
 			.exec()
 	}
 
-	async getCollections() {
+	async getCollections(): Promise<Collection[]> {
 		const genres = await this.getAll()
-		const collections = genres
-		/* NEED WRITE*/
+
+		const collections = await Promise.all(
+			genres.map(async genre => {
+				const moviesByGenre = await this.movieService.byGenres([genre._id])
+
+				if (moviesByGenre.length == 0) return null
+
+				const result: Collection = {
+					_id: String(genre._id),
+					title: genre.name,
+					slug: genre.slug,
+					image: moviesByGenre[0].bigPoster
+				}
+
+				return result
+			})
+		)
+
 		return collections
 	}
 
