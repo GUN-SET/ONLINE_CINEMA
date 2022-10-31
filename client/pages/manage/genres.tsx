@@ -1,0 +1,13 @@
+import {PropsWithChildren} from 'react'
+
+import GenreList from '@/components/screens/admin/genres/GenreList'
+
+import {NextPageAuth} from '@/shared/types/auth.types'
+
+const GenreListPage: NextPageAuth<PropsWithChildren<unknown>> = () => {
+	return <GenreList />
+}
+
+GenreListPage.isOnlyAdmin = true
+
+export default GenreListPage

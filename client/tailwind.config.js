@@ -2,8 +2,8 @@ const colors = require('tailwindcss/colors')
 const plugin = require('tailwindcss/plugin')
 
 const primary = '#E30B13'
-/** @type {import('tailwindcss').Config} */
 
+/** @type {import('tailwindcss').Config} */
 
 module.exports = {
 	content: [
@@ -79,6 +79,8 @@ module.exports = {
 		}
 	},
 	plugins: [
+		require('@tailwindcss/forms'),
+		require('@tailwindcss/aspect-ratio'),
 		plugin(({addComponents, theme, addUtilities}) => {
 			addComponents({
 				'.card': {
